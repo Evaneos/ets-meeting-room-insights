@@ -1,41 +1,65 @@
-import os
+import os, re, datetime, csv, itertools
 from dotenv import load_dotenv
 from twilio.rest import Client
-import datetime
-import csv
+from progress.bar import ChargingBar
+
+def overlapping_time(participants):
+    sorted_participant = sorted(participants, key=lambda x: x.start_time)
+    overlap = 0
+    for p1, p2 in itertools.combinations(sorted_participant, 2):
+        start = max(p1.start_time, p2.start_time)
+        end = min(p1.end_time, p2.end_time)
+        if start < end:
+            overlap += (end - start).total_seconds()
+    return overlap
 
 if __name__ == '__main__':
     load_dotenv()
-
+    
     client = Client(os.getenv("TWILIO_ACCOUNT_SID"), os.getenv("TWILIO_AUTH_TOKEN"))
 
     rooms = client.video.v1.rooms.list(
         status="completed",
-        date_created_after=datetime.date(2022,8,1).strftime('%Y-%m-%dT%H:%M:%SZ'), # yyyy-MM-dd'T'HH:mm:ss'Z'
-        date_created_before=datetime.date(2023,1,1).strftime('%Y-%m-%dT%H:%M:%SZ')
+        date_created_after=datetime.date(2022,10,12).strftime('%Y-%m-%dT%H:%M:%SZ'), # yyyy-MM-dd'T'HH:mm:ss'Z'
+        date_created_before=datetime.date(2023,3,1).strftime('%Y-%m-%dT%H:%M:%SZ')
     )
 
     results = []
-
+    bar = ChargingBar('Fetching', max=len(rooms))
+    
     for room in rooms:
         participants = client.video.v1 \
             .rooms(room.sid) \
             .participants \
             .list()
 
+        if re.match(r'.*@\d+', room.unique_name) == None:
+            bar.next()
+            continue
+
+        request_id = room.unique_name.split('@')[1]
+        destination_name = room.unique_name.split('@')[0]
+            
         if len(participants) < 2:
-            total_time = 0
-        else:
-            sorted_participants_start_time = sorted(participants, key=lambda x: x.start_time)
-            second_participant_to_connect = sorted_participants_start_time[1].start_time
-            sorted_participants_end_time = sorted(participants, key=lambda x: x.end_time, reverse=True)
-            second_to_last_participant_left = sorted_participants_end_time[1].end_time
-            total_time = (second_to_last_participant_left - second_participant_to_connect).total_seconds()
-
-        results.append([room.sid, room.unique_name, len(participants), total_time])
-
+            bar.next()
+            continue
+        
+        total_time = int(overlapping_time(participants))
+         
+        results.append([
+            room.sid, 
+            room.unique_name, 
+            request_id,
+            destination_name,
+            len(participants), 
+            total_time
+        ])
+        
+        bar.next()
+    bar.finish()
+    
     filename = "rooms.csv"
-    fields = ['Room sid', 'Room unique name', 'Max participants', 'Duration (s)']
+    fields = ['Room sid', 'Room unique name', 'Request ID', 'Destination', 'Max participants', 'Duration (s)']
     with open(filename, "w") as f:
         write = csv.writer(f)
         write.writerow(fields)
