@@ -21,7 +21,7 @@ if __name__ == '__main__':
     rooms = client.video.v1.rooms.list(
         status="completed",
         date_created_after=datetime.date(2022,10,12).strftime('%Y-%m-%dT%H:%M:%SZ'), # yyyy-MM-dd'T'HH:mm:ss'Z'
-        date_created_before=datetime.date(2023,3,1).strftime('%Y-%m-%dT%H:%M:%SZ')
+        date_created_before=datetime.date(2023,10,1).strftime('%Y-%m-%dT%H:%M:%SZ')
     )
 
     results = []
