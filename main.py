@@ -49,6 +49,7 @@ if __name__ == '__main__':
         results.append([
             room.sid, 
             room.unique_name, 
+            room.date_updated,
             request_id,
             destination_name,
             len(participants), 
@@ -59,7 +60,7 @@ if __name__ == '__main__':
     bar.finish()
     
     filename = "rooms.csv"
-    fields = ['Room sid', 'Room unique name', 'Request ID', 'Destination', 'Max participants', 'Duration (s)']
+    fields = ['Room sid', 'Room unique name', 'Room created at', 'Request ID', 'Destination', 'Max participants', 'Duration (s)']
     with open(filename, "w") as f:
         write = csv.writer(f)
         write.writerow(fields)
