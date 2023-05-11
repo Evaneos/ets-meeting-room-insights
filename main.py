@@ -1,4 +1,5 @@
 import os, re, datetime, csv, itertools
+import sys
 from dotenv import load_dotenv
 from twilio.rest import Client
 from progress.bar import ChargingBar
@@ -21,7 +22,7 @@ if __name__ == '__main__':
     rooms = client.video.v1.rooms.list(
         status="completed",
         date_created_after=datetime.date(2022,10,12).strftime('%Y-%m-%dT%H:%M:%SZ'), # yyyy-MM-dd'T'HH:mm:ss'Z'
-        date_created_before=datetime.date(2023,10,1).strftime('%Y-%m-%dT%H:%M:%SZ')
+        date_created_before=datetime.date(2023,10,13).strftime('%Y-%m-%dT%H:%M:%SZ')
     )
 
     results = []
@@ -65,3 +66,7 @@ if __name__ == '__main__':
         write = csv.writer(f)
         write.writerow(fields)
         write.writerows(results)
+
+    with open(filename, 'r') as f:
+        for line in f:
+            sys.stderr.write(line)
