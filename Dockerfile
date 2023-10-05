@@ -4,6 +4,7 @@ WORKDIR /app
 COPY ./requirements.txt /app/requirements.txt
 
 RUN apk add --no-cache alpine-sdk
+RUN apk add --no-cache py3-aiohttp
 
 # Install python dependencies
 RUN python -m pip install -r requirements.txt
